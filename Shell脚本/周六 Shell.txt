@@ -1,0 +1,11 @@
+1.sed 对文件做/更删改查
+  #sed -n '1p' /etc/passwd    查看第一行
+  #sed -n '4，9p' /etc/passwd   查看第四行到第九行
+  #sed -n '3p;6p' /etc/passwd   查看第三行和第九行
+  #sed -i '1,4d' 1.txt   删除1.txt文件中的1到4行（-i 指令甚用!）
+  #sed '/^$/d' 1.txt     删除文件的空白行
+  #sed 's/2017/xxxx/g' 1.txt  替换1.txt文件中的多有2017为xxxx
+  #sed 's/2017/xxxx/2' 1.txt  替换1.txt文件中的每一行的第二个2017为xxxx
+  #sed 's/2017//g' 1.txt      替换为空实现删除所有
+  #sed -r 's/^(.)(.*)(.)$/\3\2\1/' 1.txt    第一个字符和最后一个字符对换
+  

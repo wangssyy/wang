@@ -1,0 +1,35 @@
+
+
+#!/bin/bash
+
+
+cecho(){
+   echo -e "\033[$1m$2\033[0m"
+}
+
+
+cecho 32 ok
+cecho 33 ok
+cecho 34 Error
+cecho 35 hehe
+cecho 43 nihao
+cecho 44 haha
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
