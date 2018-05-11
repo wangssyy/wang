@@ -1,0 +1,578 @@
+• 真机上操作：控制教学用虚拟机
+– 格式:rht-vmctl  控制指令   虚拟机名
+– 常用控制指令: reset(还原)
+
+[root@room9pc01 ~]# rht-vmctl reset classroom
+[root@room9pc01 ~]# rht-vmctl reset server
+[root@room9pc01 ~]# rht-vmctl reset desktop
+
+################################################################
+防火墙设置
+虚拟机Server0
+[root@server0 ~]# firewall-cmd  --set-default-zone=trusted 
+
+虚拟机desktop0
+[root@desktop0 ~]# firewall-cmd  --set-default-zone=trusted 
+################################################################
+配置SMB共享, 跨平台的共享可以实现Linux与Linux之间,也可以实现Linux与windows之间
+
+• Samba 软件项目
+– 用途:为客户机提供共享使用的文件夹
+
+• 所需软件包:samba
+• 系统服务:smb
+• 默认samba必须有用户验证
+
+– 删除用户:pdbedit -x 用户名
+
+服务端虚拟机Server0
+
+1.安装samba软件
+[root@server0 ~]# yum -y install samba
+
+2.建立Samba共享使用的帐号
+[root@server0 ~]# useradd harry
+[root@server0 ~]# useradd kenji
+[root@server0 ~]# useradd chihiro
+
+[root@server0 ~]# pdbedit -a chihiro    #将本地用户添加为Samba共享帐号
+[root@server0 ~]# pdbedit -a harry      #将本地用户添加为Samba共享帐号
+[root@server0 ~]# pdbedit -a kenji      #将本地用户添加为Samba共享帐号
+
+[root@server0 ~]# pdbedit -L       #显示所有Samba共享帐号
+harry:1001:
+chihiro:1003:
+kenji:1002:
+[root@server0 ~]# 
+
+3. 修改配置文件
+[root@server0 ~]# vim /etc/samba/smb.conf #vim命令模式  /workgroup
+                                         #vim命令模式 按G(大写)到全文的最后
+......  
+                                               
+        workgroup = STAFF       #设置工作组     
+......
+        [common]                #共享名
+        path = /common          #共享的实际路径
+
+[root@server0 ~]# mkdir /common
+[root@server0 ~]# echo 123  > /common/123.txt
+[root@server0 ~]# ls /common/
+123.txt
+
+4.重起smb服务
+[root@server0 ~]# systemctl  restart smb   #重起smb服务
+[root@server0 ~]# systemctl  enable smb    #设置smb服务开机自启动
+
+5. SELinux 布尔值 (开与关  on 与 off) 功能的开关
+  – 需要加 -P 选项才能实现永久设置
+  #查看SELinux影响所有服务的功能开关
+[root@server0 ~]# getsebool -a | grep samba 
+  #修改SELinux影响服务的功能开关
+[root@server0 ~]# setsebool  samba_export_all_ro  on  #修改SELinux功能
+[root@server0 ~]# getsebool -a | grep samba
+
+客户端虚拟机Desktop0:了解内容
+1.安装客户端软件samba-client
+2.利用smbclient进行访问
+• 列出共享资源
+[root@desktop0 ~]# smbclient -L 172.25.0.11
+Enter root's password:            #直接回车
+• 连接到共享文件夹
+– smbclient -U 用户名 //服务器地址/共享名
+[root@desktop0 ~]# smbclient -U harry //172.25.0.11/common
+Enter harry's password: 
+Domain=[STAFF] OS=[Unix] Server=[Samba 4.1.1]
+smb: \> 
+
+客户端访问服务端资源影响方面
+
+  1. 防火墙策略
+
+  2. 服务本身的访问控制
+
+  3. 服务端SELinux策略限制
+
+  4. 服务端目录的本地权限
+
+
+
+############################################################
+方便科学的访问利用mount挂载
+     -o:添加选项
+
+客户端虚拟机Desktop0:
+
+1.安装支持samba挂载的软件,文件系统cifs
+# yum -y install cifs-utils
+
+2.挂载访问
+# mkdir /mnt/nsd
+
+# mount -o user=harry,pass=123  //172.25.0.11/common   /mnt/nsd/
+# df  -h
+
+# ls /mnt/nsd
+
+
+##############################################################
+/etc/fstab完成samba开机自动挂载
+
+   _netdev:网络设备(先启动网络服务配置好ip地址,然后再挂载该设备)
+
+[root@desktop0 ~]# vim   /etc/fstab
+ 
+//172.25.0.11/common    /mnt/nsd    cifs defaults,user=harry,pass=123,_netdev   0  0
+
+[root@desktop0 ~]# umount /mnt/nsd
+
+[root@desktop0 ~]# df -h
+
+[root@desktop0 ~]# mount -a
+[root@desktop0 ~]# df -h 
+##############################################################
+读写Samba共享
+
+服务端虚拟机server0
+
+1.修改配置文件/etc/samba/smb.conf
+[root@server0 ~]# vim /etc/samba/smb.conf 
+[devops]
+path = /devops
+write list = chihiro           #允许chihiro可以写
+
+2.创建共享目录结构
+[root@server0 ~]# mkdir /devops
+[root@server0 ~]# echo haha > /devops/test.txt
+[root@server0 ~]# ls /devops/
+3.重起smb服务
+[root@server0 ~]# systemctl restart smb
+
+客户端Desktop0:挂载访问
+[root@desktop0 ~]# mkdir /mnt/stu
+[root@desktop0 ~]# vim /etc/fstab 
+//172.25.0.11/devops /mnt/stu  cifs  defaults,user=chihiro,pass=123,_netdev 0 0
+
+[root@desktop0 ~]# mount -a
+[root@desktop0 ~]# df -h
+
+#################################################################
+读写Samba共享补充
+
+服务端虚拟机Server0:
+1.判断客户端访问服务端时,身份
+[root@server0 ~]# setfacl -m u:chihiro:rwx /devops
+[root@server0 ~]# getfacl /devops
+
+2.设置SELinux策略
+[root@server0 ~]# getsebool -a | grep samba
+
+[root@server0 ~]# setsebool samba_export_all_rw on
+[root@server0 ~]# getsebool -a | grep samba
+
+客户端虚拟机Desktop0:
+[root@desktop0 ~]# df  -h
+[root@desktop0 ~]# touch /mnt/stu/1.txt
+[root@desktop0 ~]# ls /mnt/stu
+
+################################################################
+
+了解:多用户的samba访问,专不同权限的普通用户设计
+
+在 desktop0 上访问 server0 提供的共享 devops
+1)将此共享永久挂载在 /mnt/dev 目录
+2)挂载时以用户 kenji 作为认证
+3)必要的时候,任何普通用户都可以通过用户 chihiro 来临时获取写的权限
+
+[root@desktop0 /]# umount /mnt/stu/
+[root@desktop0 /]# vim /etc/fstab 
+
+//172.25.0.11/devops /mnt/stu cifs defaults,user=kenji,pass=123,_netdev,multiuser,sec=ntlmssp  0 0
+
+[root@desktop0 /]# mount -a
+[root@desktop0 /]# df -h
+[root@desktop0 /]# su - natasha
+[natasha@desktop0 stu]$ cd /mnt/stu
+[natasha@desktop0 stu]$ cifscreds add -u chihiro 172.25.0.11
+Password: 
+[natasha@desktop0 stu]$ ls
+
+##################################################################
+配置NFS共享  Linux与Linux之间的共享
+
+NFS共享概述
+• Network File System,网络文件系统
+– 用途:为客户机提供共享使用的文件夹
+– 协议:NFS(TCP/UDP 2049)、RPC(TCP/UDP 111)
+
+• 所需软件包:nfs-utils
+• 系统服务:nfs-server
+
+
+##############################################################
+搭建基本NFS服务
+
+服务端虚拟机Server0:
+1.安装软件nfs-utils
+[root@server0 ~]# rpm -q nfs-utils
+nfs-utils-1.3.0-0.el7.x86_64
+
+2.修改配置文件/etc/exports
+[root@server0 ~]# mkdir /public
+[root@server0 ~]# echo 123 > /public/abc.txt
+[root@server0 ~]# ls /public/
+[root@server0 ~]# vim /etc/exports
+ /public    *(ro)                       #共享路径      客户端地址(权限)
+
+[root@server0 ~]# systemctl  restart nfs-server
+
+虚拟机Desktop0:
+[root@desktop0 /]# mkdir /mnt/nfs
+[root@desktop0 /]# vim /etc/fstab 
+172.25.0.11:/public  /mnt/nfs  nfs  defaults,_netdev   0  0
+
+[root@desktop0 /]# mount -a
+[root@desktop0 /]# df  -h
+
+##################################################################
+环境变量
+  USER:存放登陆的用户身份
+
+  PATH:储存命令的搜寻路径
+           执行命令时,都会区域PATH变量值中去寻找,该命令的执行程序,
+           如果能找到就执行,不能找到报告命令没有找到
+
+[root@server0 ~]# echo $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+
+[root@server0 ~]# vim /root/hello 
+#!/bin/bash
+echo hello
+[root@server0 ~]# chmod +x /root/hello
+
+[root@server0 ~]# cp /root/hello  /usr/bin/
+[root@server0 ~]# ls /usr/bin/hello
+
+[root@server0 ~]# hello
+##############################################################
+划分分区  GPT
+
+ GPT :  分区模式   128个主分区     最大18EB容量
+
+[root@server0 ~]# parted  /dev/vdb
+(parted) mktable  gpt         #设置分区模式   
+(parted) print                #显示分区表内容
+(parted) mkpart               #划分新的分区指令
+  分区名称？  []?    haha          #指定分区名称
+  文件系统类型？  [ext2]?  ext4    #指定文件系统类型,不起实际作用
+  起始点？ 0                      
+  结束点？ 1G          
+  警告: The resulting partition is not properly aligned
+ for best performance.
+  忽略/Ignore/放弃/Cancel? Ignore   #忽略GPT分区模式,占有的磁盘空间
+
+ (parted) print 
+ (parted) unit GB                  #使用GB作为单位
+ (parted) mkpart 
+   分区名称？  []? haha
+   文件系统类型？  [ext2]? ext4
+   起始点？ 1G          
+   结束点？ 2G                
+ (parted) quit 
+ [root@server0 ~]# ls /dev/vdb[1-2]
+
+##############################################################
+FTP服务
+服务端虚拟机Server0:
+默认共享路径:/var/ftp
+默认访问用户身份:ftp
+ 
+ FTP客户端访问FTP服务端时,登陆的位置为该用户,在服务器上的家目录
+
+1.安装vsftpd软件
+[root@server0 ~]# yum -y install vsftpd
+
+2.启动vsftpd服务
+[root@server0 ~]# systemctl restart vsftpd
+[root@server0 ~]# systemctl enable vsftpd
+
+客户端Desktop0:
+
+1.安装客户端软件lftp
+[root@desktop0 ~]# yum -y install  lftp
+
+[root@desktop0 ~]# lftp 172.25.0.11
+lftp 172.25.0.11:~> ls
+#########################################################
+ wc命令 统计文本文件的行数
+
+ 请计算Linux系统一共有多少个用户?
+
+[root@server0 /]# wc -l /etc/passwd
+41 /etc/passwd
+
+ 请计算Linux系统/etc/有多少个tab结尾的文件?(不包含子目录)
+[root@server0 /]# ls /etc/*tab | wc -l
+
+ 请计算Linux系统/etc/有多少个tab结尾的文件?(包含子目录)
+[root@server0 /]# find /etc/ -name "*tab" | wc -l
+
+ 请计算Linux系统/etc/有多少个.conf结尾的文件?(包含子目录)
+
+[root@server0 /]# find /etc/ -name "*.conf" | wc -l
+
+###########################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

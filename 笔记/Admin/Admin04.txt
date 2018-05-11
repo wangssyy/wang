@@ -1,0 +1,448 @@
+教学环境介绍
+
+使用教学虚拟机
+
+
+
+• 每个学员机上有三台预先配置好的虚拟机
+– server —— 作为练习用服务器
+– desktop —— 作为练习用客户机
+
+– classroom —— 提供网关/DNS/软件素材等资源
+
+  保证 classroom 首先开启系统
+
+
+• 真机上操作：控制教学用虚拟机
+– 格式:rht-vmctl  控制指令   虚拟机名
+– 常用控制指令: reset(还原)
+
+[root@room9pc01 ~]# rht-vmctl reset classroom
+
+[root@room9pc01 ~]# rht-vmctl reset server
+
+[root@room9pc01 ~]# rht-vmctl reset desktop
+
+利用root登陆 server 与 desktop 虚拟机  密码：redhat
+
+  虚拟机Server
+          IP地址：172.25.0.11
+                  主机名：server0.example.com
+                  系统版本：RHEL 7.0
+
+  虚拟机Desktop
+          IP地址：172.25.0.10
+                  主机名：desktop0.example.com
+                  系统版本：RHEL 7.0
+
+##############################################################
+真机 远程管理
+
+1.真机 利用ping命令与虚拟机server和desktop通信
+[root@room9pc01 ~]# ping  172.25.0.10
+
+[root@room9pc01 ~]# ping  172.25.0.11
+
+2.真机 远程管理
+   
+   -X(大写):在远程管理时，本地运行对方的图形程序
+
+  Ctrl+Shift+t : 新开一个终端
+
+[root@room9pc01 ~]# ssh   登陆对方的用户名@IP地址
+
+[root@room9pc01 ~]# ssh root@172.25.0.11
+Last login: Tue Mar 13 10:15:20 2018 from 172.25.0.250
+[root@server0 ~]# 
+[root@server0 ~]# 
+[root@server0 ~]# 
+[root@server0 ~]# exit        #退出远程管理
+登出
+Connection to 172.25.0.11 closed.
+[root@room9pc01 ~]# ssh -X  root@172.25.0.11
+
+[root@server0 ~]#  firefox
+
+#################################################################
+软件包管理
+
+1.关闭虚拟机，图形添加光驱设备
+
+[root@server0 ~]# poweroff 
+Connection to 172.25.0.11 closed by remote host.
+Connection to 172.25.0.11 closed.
+[root@room9pc01 ~]# 
+
+2.真机远程管理虚拟机server,进行挂载
+
+[root@room9pc01 ~]# ssh -X root@172.25.0.11
+
+[root@server0 ~]# mount /dev/cdrom  /dvd
+mount: /dev/sr0 写保护，将以只读方式挂载
+[root@server0 ~]# ls  /dvd
+
+简单的软件包管理
+
+• RPM Package Manager,RPM包管理器
+
+– rpm -q   软件名...
+– rpm -ivh 软件名-版本信息.rpm...
+– rpm -e   软件名...
+
+
+[root@server0 ~]# rpm -q vsftpd     #查看寻软件包是否安装
+未安装软件包 vsftpd 
+[root@server0 ~]# rpm -q firefox
+firefox-24.5.0-1.el7.x86_64
+
+[root@server0 ~]# rpm -ivh /dvd/Packages/vsftpd-3.0.2-22.el7.x86_64.rpm 
+
+[root@server0 ~]# rpm -q vsftpd 
+  
+[root@server0 ~]# rpm -e vsftpd     #卸载软件包
+
+[root@server0 ~]# rpm -q vsftpd
+
+了解内容：导入红帽光盘包的签名信息
+[root@server0 ~]# rpm --import /dvd/RPM-GPG-KEY-redhat-release 
+
+#################################################################
+依赖关系：
+错误：依赖检测失败：
+
+
+Yum软件包仓库配置及使用,自动解决依赖关系
+ 
+ 服务：为客户端自动解决依赖关系，并且安装软件
+
+ 服务端: 虚拟机classroom 搭建完成Web服务 共享光盘所有内容
+   验证： 浏览器中 
+       http://classroom.example.com/content/rhel7.0/x86_64/dvd/
+
+
+ 客户端：虚拟机server
+    修改配置文件 ， 指定服务端位置
+   /etc/yum.repos.d/*.repo
+    正确的文件与错误的文件会相互影响
+
+[root@server0 ~]# rm -rf /etc/yum.repos.d/*
+[root@server0 ~]# vim /etc/yum.repos.d/dvd.repo
+
+ [rhel7]                #仓库标识
+ name=nsd rhel7         #仓库描述信息
+ baseurl=http://classroom.example.com/content/rhel7.0/x86_64/dvd/ 
+                                                                                            #服务端具体位置路径
+ enabled=1              #是否启用该文件
+ gpgcheck=0             #是否检测软件包签名信息
+
+[root@server0 ~]# yum repolist  #列出仓库信息
+
+[root@server0 ~]# yum -y install httpd     #安装软件
+
+[root@server0 ~]# yum -y install sssd
+
+[root@server0 ~]# yum -y install system-config-kickstart 
+
+[root@server0 ~]# yum -y install mariadb-server
+
+
+[root@server0 ~]# yum  remove  软件名      #卸载软件
+
+
+[root@server0 ~]# yum clean all        #清缓存
+
+
+
+############################################################
+配置网络地址
+
+   /etc : 存放系统各种配置文件 
+
+一、永久配置主机名 /etc/hostname
+
+[root@A ~]# vim /etc/hostname 
+A.tedu.cn
+
+[root@A ~]# exit
+[root@room9pc01 ~]# ssh -X root@172.25.0.11
+
+[root@A ~]# 
+
+二、配置IP地址
+
+    网卡配置文件：/etc/sysconfig/network-scripts/ifcfg-eth0
+
+nmcli连接管理
+
+1.查看nmcli命令识别的网卡名字
+[root@A ~]# nmcli connection show
+
+2.配置ip地址
+
+[root@A ~]# nmcli   connection   modify  'System eth0'       
+   ipv4.method   manual                                  
+   ipv4.addresses   '172.25.0.110/24   172.25.0.254'         
+   connection.autoconnect   yes
+
+   nmcli 连接网络配置   '网卡识别的名字'       
+   ipv4.method 配置ip地址的方法 ，auto自动获取    manual手工配置 
+                                                 
+   ipv4.addresses 'ip地址/子网掩码   网关地址'         
+   connection.autoconnect yes  每次开机自动启用
+
+3.激活配置
+[root@A ~]# nmcli connection up 'System eth0'
+
+[root@A ~]# ifconfig    #查看ip地址
+[root@A ~]# route       #查看网关地址   gateway
+
+   successfully : 成功
+
+三、DNS服务器配置
+   Domain  Name  Server 
+     作用： 域名解析为对应IP地址
+   DNS服务器: 虚拟机classroom
+     
+     配置文件: /etc/resolv.conf 
+
+虚拟机Server
+[root@A ~]# vim /etc/resolv.conf 
+
+nameserver  172.25.254.254
+
+[root@A ~]# nslookup desktop0.example.com
+Server:		172.25.254.254
+Address:	172.25.254.254#53
+
+Name:	desktop0.example.com
+Address: 172.25.0.10
+
+##############################################################
+查找文本内容
+
+• 根据字符串模式提取文本行
+– grep [选项] '匹配模式'    文本文件...
+
+• 常用命令选项
+– -v,取反匹配
+– -i,忽略大小写
+
+
+[root@A ~]# grep 'root'  /etc/passwd
+
+[root@A ~]# grep 'ROOT'  /etc/passwd
+[root@A ~]# grep -i 'ROOT'  /etc/passwd   #忽略大小写
+
+[root@A ~]# grep -v 'root'  /etc/passwd   #不要包含root
+
+[root@A ~]# grep -v 'a'  /etc/passwd      #不要包含a
+
+[root@A ~]# grep -v 'bash'  /etc/passwd   #不要包含bash
+
+[root@A ~]# grep -v 'nologin'  /etc/passwd
+
+
+– ^word  以字符串word开头
+– word$  以字符串word结尾
+
+[root@A ~]# grep '^root' /etc/passwd
+
+[root@A ~]# grep 'root$' /etc/passwd
+[root@A ~]# grep 'bash$' /etc/passwd
+
+[root@A ~]# grep 'nologin$' /etc/passwd
+
+
+###############################################################
+ 重定向输出
+
+   >  ： 覆盖重定向      将前面命令的输出，写入文本文件中   自带touch功能
+   >>  ： 追加重定向  
+[root@A ~]# grep 'bash$' /etc/passwd 
+root:x:0:0:root:/root:/bin/bash
+student:x:1000:1000:Student User:/home/student:/bin/bash
+[root@A ~]# grep 'bash$' /etc/passwd > /opt/nsd.txt
+[root@A ~]# cat /opt/nsd.txt 
+
+[root@A ~]# head -3 /etc/passwd
+
+[root@A ~]# head -3 /etc/passwd  >   /opt/1.txt
+[root@A ~]# cat /opt/1.txt
+
+[root@A ~]# hostname
+[root@A ~]# hostname  >  /opt/1.txt 
+[root@A ~]# cat  /opt/1.txt
+
+[root@A ~]# hostname  >>  /opt/1.txt 
+[root@A ~]# cat  /opt/1.txt
+
+[root@A ~]# hostname  >>  /opt/1.txt 
+[root@A ~]# cat  /opt/1.txt
+
+###################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

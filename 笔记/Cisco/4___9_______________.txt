@@ -1,0 +1,32 @@
+察看mac地址表
+Switch#show mac-address-table
+
+1个接口可以对应多个mac地址
+
+进入vlan 1 接口中配置ip地址
+Switch(config)#interface vlan 1
+Switch(config-if)#ip address 192.168.0.5 255.255.255.0
+Switch(config-if)#no shutdown
+
+
+创建vlan2
+Switch(config)#vlan 2
+将f0/2接口加入vlan2
+Switch(config)#interface fastethernet 0/2
+Switch(config-if)#switchport access vlan 2
+课堂练习：
+1，主机192.168.0.1属于vlan 10
+2，相同vlan主机需要互通。
+
+设置交换机之间的接口为中继链路
+Switch(config-if)#switchport mode trunk 
+
+同时进入f0/3与f0/5接口
+Switch(config)#interface range f0/3,f0/5
+捆绑为以太通道1
+Switch(config-if-range)#channel-group 1 mode on
+进入以太通道1
+Switch(config)#interface port-channel 1
+将此以太通道中的所有物理端口都设置为中继链路
+Switch(config-if)#switchport mode trunk 
+

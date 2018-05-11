@@ -1,0 +1,478 @@
+查看内核版本
+[root@nsd1802 ~]# uname -r  
+3.10.0-693.el7.x86_64
+
+[root@nsd1802 ~]# hostname   #显示主机名
+
+[root@nsd1802 ~]# pwd      #显示当前所在位置
+
+[root@nsd1802 ~]# cd  /    #切换到  /  目录下
+  
+[root@nsd1802 /]# pwd      #显示当前所在位置
+
+[root@nsd1802 /]# ls       #显示当前所在目录的 内容
+
+查看文本文件内容
+[root@nsd1802 ~]# cat     #不适合 查看大文件
+
+[root@nsd1802 ~]# less  /etc/passwd   #适合查看大文件，分屏阅读工具
+
+                                 按 q 退出  
+        
+查看文本文件部分内容
+
+[root@nsd1802 ~]# head  -3  /etc/passwd   #显示文本文件内容的前3行
+[root@nsd1802 ~]# tail  -4  /etc/passwd   #显示文本文件内容的尾部4行
+
+[root@nsd1802 ~]# head  -2  /etc/passwd   #显示文本文件内容的前2行
+[root@nsd1802 ~]# tail  -1  /etc/passwd   #显示文本文件内容的尾部1行
+
+[root@nsd1802 ~]# head    /etc/passwd    #默认显示文本文件前10行
+
+[root@nsd1802 ~]# tail    /etc/passwd    #默认显示文本文件尾10行
+
+
+查看文本文件，包含指定字符串的行
+
+ grep  '指定字符串'    /路径/文本文件
+
+
+[root@nsd1802 ~]# grep  'root'  /etc/passwd
+
+[root@nsd1802 ~]# grep  'bin'  /etc/passwd
+
+[root@nsd1802 ~]# grep  'dog'  /etc/passwd
+
+##################################################################
+命令行基础
+
+• Linux命令
+  – 用来实现某一类功能的指令或程序
+       执行命令一般都要找到相应的程序
+
+  – 命令的执行依赖于解释器(例如:/bin/bash)
+    默认的解释器：/bin/bash
+
+  绿色：可以执行的程序
+
+            用户 -------->解释器 -------->内核------->硬件
+
+
+命令行的一般格式
+• 基本用法
+– 命令字    [选项]...     [参数1]    [参数2]...
+
+
+[root@server0 ~]# ls -l /root/
+
+
+ 快速编辑技巧
+• Tab键自动补全
+– 可补齐命令字、选项、参数、文件路径、软件名、服务名
+
+[root@nsd1802 ~]# ls /et（tab）/red（tab）-r（tab）
+/etc/redhat-release
+[root@nsd1802 ~]# cat  /et（tab）/red（tab）-r（tab）  
+
+[root@nsd1802 ~]# if(连续按两次tab)
+
+ # ls  /et（tab）/sysco（tab）/netw（tab）-（tab）/ifc（tab）-e（tab）
+
+ # cat /et（tab）/sysco（tab）/netw（tab）-（tab）/ifc（tab）-e（tab）
+
+
+
+• 快捷键
+– Ctrl + l: 清空整个屏幕
+– Ctrl + c: 结束正在运行的命令
+– Esc + . : 粘贴上一个命令的参数
+
+– Ctrl + u:清空至行首
+– Ctrl + w:往回删除一个单词(以空格界定)
+
+
+ # ls  /et（tab）/sysco（tab）/netw（tab）-（tab）/ifc（tab）-e（tab）
+
+ # cat  Esc + .
+
+ # cat  -n  Esc + .
+
+#################################################################
+mount挂载操作
+
+访问光盘的内容
+
+  windows：
+
+           光盘文件------->光驱设备------->CD驱动器
+
+  Linux：
+
+           光盘文件------->光驱设备-------->访问点(随意的目录)
+
+  青色：快捷方式
+
+
+访问点： 在访问设备资源时
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1.通过图形将光盘文件放入光驱设备
+
+2.查看光驱设备文件
+[root@nsd1802 ~]# ls /dev/sr0
+/dev/sr0
+[root@nsd1802 ~]# ls /dev/cdrom
+/dev/cdrom
+[root@nsd1802 ~]# ls -l /dev/cdrom    #以长格式显示参数详细属性
+
+3.访问光驱设备内容
+
+[root@nsd1802 ~]# mkdir /dvd
+[root@nsd1802 ~]# ls /dvd/
+
+[root@nsd1802 ~]# mount /dev/cdrom  /dvd  #让/dvd目录成为/dev/cdrom访问点
+
+[root@nsd1802 ~]# ls /dvd/
+[root@nsd1802 ~]# ls /dvd/P（tab）
+
+4.卸载
+[root@nsd1802 ~]#  umount  /dvd
+[root@nsd1802 ~]#  ls /dvd/
+
+[root@nsd1802 ~]#  mount /dev/cdrom  /dvd  #让/dvd目录成为/dev/cdrom访问点
+
+[root@nsd1802 ~]#  ls /dvd/
+
+#################################################################
+
+注意：
+   1.挂载时  挂载点目录（访问点）尽量不要是 根目录 已经存在的目录，自己创建新目录
+   2.卸载时  当前路径，不能是挂载点目录（访问点）
+
+#################################################################
+目录 与 文件 的管理
+
+
+• cd — Change Directory
+– 用途:切换工作目录
+– 格式:cd [目标文件夹位置]
+
+绝对路径： 以根目录开始的路径
+
+相对路径： 不以根目录开始的路径，以当前为参照的路径
+
+
+[root@nsd1802 /]# cd /etc/pki/       #绝对路径
+[root@nsd1802 pki]# pwd
+[root@nsd1802 pki]# ls
+[root@nsd1802 pki]# cd /etc/pki/CA   #绝对路径
+[root@nsd1802 CA]# pwd
+
+[root@nsd1802 /]# cd  /
+[root@nsd1802 /]# pwd
+[root@nsd1802 /]# cd  /etc/pki/      #绝对路径
+[root@nsd1802 pki]# pwd
+
+[root@nsd1802 pki]#  cd  CA          #相对路径
+[root@nsd1802 CA]# pwd
+
+[root@nsd1802 /]# cd   /etc/pki/ 
+[root@nsd1802 pki]# pwd
+[root@nsd1802 pki]# cd  ..       #后退一层
+[root@nsd1802 etc]# pwd
+
+[root@nsd1802 etc]# cd  ..       #后退一层
+[root@nsd1802 /]# pwd
+
+
+[root@nsd1802 /]# cd   /var/log
+[root@nsd1802 log]# pwd
+[root@nsd1802 log]# cd  ..
+[root@nsd1802 var]# pwd
+
+[root@nsd1802 var]# cd  ..
+[root@nsd1802 /]# pwd
+
+~user表示用户user的家目录
+
+[root@nsd1802 log]# cd ~root
+[root@nsd1802 ~]# pwd
+/root
+[root@nsd1802 ~]# cd ~lisi
+[root@nsd1802 lisi]# pwd
+/home/lisi
+[root@nsd1802 lisi]# useradd tom          #创建用户tom
+[root@nsd1802 lisi]# cd ~tom
+[root@nsd1802 tom]# pwd
+/home/tom
+
+[root@nsd1802 /]# cd ~        #默认回到当前用户的家目录
+[root@nsd1802 ~]# pwd
+/root
+[root@nsd1802 ~]# cd /
+[root@nsd1802 /]# cd          #默认回家
+[root@nsd1802 ~]# pwd
+/root
+[root@nsd1802 ~]# 
+
+
+
+
+
+• ls — List
+– 格式:ls [选项]... [目录或文件名]
+
+• 常用命令选项(查看命令的帮助信息可以使用     man  命令)
+– -l:以长格式显示
+– -A:包括名称以 . 开头的隐藏文档
+– -d:显示目录本身(而不是内容)的属性
+– -h:提供易读的容量单位(K、M等)
+
+[root@nsd1802 ~]# ls  /root
+[root@nsd1802 ~]# ls  /boot
+
+[root@nsd1802 ~]# ls  -l /boot
+[root@nsd1802 ~]# ls  -lh  /boot
+
+[root@nsd1802 ~]# ls  -ld /boot
+
+[root@nsd1802 ~]# ls  -l /root
+
+[root@nsd1802 ~]# ls  -l /opt
+[root@nsd1802 ~]# ls  -ld /opt
+
+[root@nsd1802 ~]# ls -A  /root
+[root@nsd1802 ~]# ls -lA  /root
+
+###############################################################
+
+使用通配符
+• 针对不确定的文档名称,以特殊字符表示
+– *:任意多个任意字符
+– ?:单个字符
+
+[root@nsd1802 /]# ls /boot/init*          #显示/boot目录下init开头
+
+[root@nsd1802 /]# ls /boot/vm*            #显示/boot目录下vm开头
+
+[root@nsd1802 /]# ls /etc/*.conf          #显示/etc目录下.conf结尾
+
+[root@nsd1802 /]# ls /dev/tty*     #显示/dev目录下tty开头
+
+[root@nsd1802 /]# ls /dev/tty?     #显示/dev目录下tty开头后面一个字符的
+[root@nsd1802 /]# ls /dev/tty??    #显示/dev目录下tty开头后面二个字符的
+[root@nsd1802 /]# ls /dev/tty???   #显示/dev目录下tty开头后面三个字符的
+
+针对不确定的文档名称,以特殊字符表示
+– [a-z]:多个字符或连续范围中的一个,若无则忽略
+– {a,min,xy}:多组不同的字符串,全匹配
+
+[root@nsd1802 /]# ls /dev/tty{1,3,5,7,9,23}
+
+[root@nsd1802 /]# ls /dev/tty[1-4]
+
+[root@nsd1802 /]# ls /dev/tty[1-7]
+
+[root@nsd1802 /]# ls /dev/tty{1,3,5,7,9,23,S0}
+
+    请显示/dev目录下,tty设备  显示  tty20～tty30 ？
+
+[root@nsd1802 /]# ls  /dev/tty2[0-9]   /dev/tty30
+
+[root@nsd1802 /]# ls  /dev/tty{2[0-9],30}
+
+
+##########################################################
+别名的定义，简化较为复杂的命令
+
+[root@nsd1802 /]# alias  hn='hostname'   #设置命令的别名
+[root@nsd1802 /]# hn
+ 
+[root@nsd1802 /]# alias  aa='ls -ld'     #设置命令的别名
+[root@nsd1802 /]# aa /root/
+
+[root@nsd1802 /]# alias
+
+[root@nsd1802 /]# unalias hn             #删除命令的别名
+[root@nsd1802 /]# hn
+bash: hn: 未找到命令...
+
+###########################################################
+
+[root@server0 ~]# mkdir -p /vod/movie/cartoon  #-p表示连父目录一起创建
+
+
+[root@nsd1802 /]# mkdir -p /opt/aa/bb/cc/dd
+[root@nsd1802 /]# ls /opt/
+
+[root@nsd1802 /]# ls /opt/aa
+
+[root@nsd1802 /]# ls /opt/aa/bb/
+
+[root@nsd1802 /]# ls /opt/aa/bb/cc/
+
+
+[root@nsd1802 /]# mkdir  /boot/nsd02  /mnt/nsd03   /opt/nsd04
+[root@nsd1802 /]# ls /boot
+[root@nsd1802 /]# ls /mnt/
+[root@nsd1802 /]# ls /opt/
+
+##########################################################
+复制、删除、移动
+rm 删除
+• rm — Remove
+– 格式:rm [选项]... 文件或目录...
+
+• 常用命令选项
+– -r、-f:递归删除(含目录)、强制删除
+
+[root@nsd1802 /]# mkdir /opt/test01
+[root@nsd1802 /]# mkdir /opt/test02
+[root@nsd1802 /]# touch /opt/1.txt
+
+[root@nsd1802 /]# ls /opt
+
+[root@nsd1802 /]# rm -rf /opt/test01
+[root@nsd1802 /]# ls /opt
+[root@nsd1802 /]# rm -rf /opt/test02
+[root@nsd1802 /]# ls /opt
+
+[root@nsd1802 /]# rm -rf /opt/1.txt
+[root@nsd1802 /]# ls /opt
+
+[root@nsd1802 /]# ls  /mnt/
+[root@nsd1802 /]# rm -rf /mnt/*
+[root@nsd1802 /]# ls  /mnt/
+
+mv 移动/改名
+• mv — Move
+– 格式:mv [选项]... 原文件...      目标路径
+
+[root@nsd1802 /]# rm -rf /opt/*
+[root@nsd1802 /]# mkdir /opt/nsd01
+[root@nsd1802 /]# touch /opt/1.txt
+[root@nsd1802 /]# ls /opt/
+
+[root@nsd1802 /]# mv /opt/1.txt  /opt/nsd01
+[root@nsd1802 /]# ls /opt/
+
+[root@nsd1802 /]# ls /opt/nsd01
+
+ 重命名：路径不变的移动
+[root@nsd1802 /]# ls /opt/
+
+[root@nsd1802 /]# mv /opt/nsd01/  /opt/student
+[root@nsd1802 /]# ls /opt/
+
+[root@nsd1802 /]# mv /opt/student/  /opt/haha
+[root@nsd1802 /]# ls /opt/
+
+
+cp 复制
+• cp — Copy
+– 格式:cp [选项]... 原文件...      目标路径
+
+• 常用命令选项
+– -r:递归,复制目录时必须有此选项
+
+[root@nsd1802 /]# rm -rf  /opt/*
+[root@nsd1802 /]# cp  /etc/passwd   /opt/
+[root@nsd1802 /]# ls  /opt/
+passwd
+[root@nsd1802 /]# cp  /etc/redhat-release  /opt/
+[root@nsd1802 /]# ls  /opt/
+passwd  redhat-release
+
+[root@nsd1802 /]# cp  /boot/  /opt/
+cp: 略过目录"/boot/"
+[root@nsd1802 /]# ls  /opt/
+
+[root@nsd1802 /]# cp  -r  /boot/ /opt/
+[root@nsd1802 /]# ls  /opt/
+boot  passwd  redhat-release
+
+
+ cp：可以在复制时，改变源文件在目标路径中名字
+
+   . : 代表当前路径
+
+[root@nsd1802 / ]#  cd   /etc/sysconfig/network-scripts
+
+[root@nsd1802 network-scripts]#  cp  /etc/passwd   .   #拷贝到当前目录下
+
+
+ cp：可以加三个以上的参数，将最后一个参数作为目标，其他作为源文件
+
+ # rm -rf /opt/*
+ # cp -r /home/ /boot/ /etc/passwd /etc/redhat-release  /opt/  
+ # ls /opt/
+
+
+ #  cp -r /boot/ /opt/
+
+ # \cp -r /boot/ /opt/    #临时取消别名
+
+
+##############################################################
+修改文本文件内容
+vim 文本编辑器
+
+ 命令模式     输入模式（插入模式）   末行模式
+
+
+[root@server0 ~]# vim  /opt/haxi.txt
+
+			i 键
+	命-----------------------------》输入模式（Esc 键回到命令模式）
+	令
+	模
+	式-----------------------------》末行模式（Esc 键回到命令模式）
+                       : 键
+
+       末行模式    ：wq   保存并退出
+			：q！   强制不保存并退出
+  
+##################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

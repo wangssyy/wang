@@ -1,0 +1,341 @@
+• 真机上操作：控制教学用虚拟机
+– 格式:rht-vmctl  控制指令   虚拟机名
+– 常用控制指令: reset(还原)
+
+[root@room9pc01 ~]# rht-vmctl reset classroom
+[root@room9pc01 ~]# rht-vmctl reset server
+[root@room9pc01 ~]# rht-vmctl reset desktop
+
+################################################################
+防火墙设置
+虚拟机Server0
+[root@server0 ~]# firewall-cmd  --set-default-zone=trusted 
+
+虚拟机desktop0
+[root@desktop0 ~]# firewall-cmd  --set-default-zone=trusted 
+
+ &:正在运行放入后台
+
+###############################################################
+搭建虚拟Web主机
+
+虚拟机Server0
+1.安装httpd
+2.修改调用配置文件/etc/httpd/conf.d/nsd01.conf
+ 
+ <VirtualHost  *:80>
+   ServerName    server0.example.com
+   DocumentRoot   /var/www/html
+ </VirtualHost>
+
+3.书写一个简单的页面文件
+  echo NSD1802 > /var/www/html/index.html
+
+4.重起服务httpd
+
+虚拟机Desktop0
+      elinks  -dump   server0.example.com
+######################################################
+搭建安全的Web服务,加密传输数据   
+
+  协议 https 安全的超文本传输协议  端口 443
+
+虚拟机Server0
+
+1.部署网站证书(营业执照)
+# cd /etc/pki/tls/certs/   #存放网站证书的路径
+# wget  http://classroom.example.com/pub/tls/certs/server0.crt
+# ls
+
+2.部署根证书(公安局信息  颁发证书的服务器信息)
+# cd /etc/pki/tls/certs/  
+# wget http://classroom.example.com/pub/example-ca.crt
+
+3.部署解密的密钥文件
+# cd /etc/pki/tls/private/
+# wget  http://classroom.example.com/pub/tls/private/server0.key
+
+4.安装支持安全Web软件  mod_ssl
+# yum  -y install  mod_ssl
+
+5.修改配置文件指定网站证书  根证书  密钥文件
+# vim /etc/httpd/conf.d/ssl.conf 
+  
+  末行模式 : set  nu    #开启行号功能
+
+ 59行   DocumentRoot  "/var/www/html"
+ 60行   ServerName  server0.example.com:443
+
+ 100行 SSLCertificateFile /etc/pki/tls/certs/server0.crt  #指定网站证书
+
+ 107行 SSLCertificateKeyFile /etc/pki/tls/private/server0.key  #指定密钥
+
+ 122行 SSLCACertificateFile /etc/pki/tls/certs/example-ca.crt  #指定根证书
+
+6.重起httpd服务
+# systemctl  restart  httpd
+
+
+7.验证虚拟机Desktop0
+[root@desktop0 ~]# firefox https://server0.example.com
+
+##################################################################
+ 邮件服务
+
+• 电子邮件服务器的基本功能
+– 为用户提供电子邮箱存储空间(用户名@邮件域名)
+– 处理用户发出的邮件 —— 传递给收件服务器
+– 处理用户收到的邮件 —— 投递到邮箱
+
+  DNS服务器 : classroom.example.com
+
+   server0.example.com
+
+搭建基本邮件服务器
+1.安装postfix
+[root@server0 ~]# rpm -q postfix
+
+2.修改配置文件 /etc/postfix/main.cf
+[root@server0 ~]# vim  /etc/postfix/main.cf
+
+  末行模式下:  set  nu   #开启行号
+
+   99行   myorigin = server0.example.com        #默认补全域名后缀
+
+  116行  inet_interfaces = all                 #允许所有网络接口
+
+  164行  mydestination = server0.example.com   #判断为本域邮件
+
+3.重起postfix服务
+[root@server0 ~]# systemctl restart postfix
+
+
+   SMTP协议:用户发邮件的协议  端口 25
+   pop3协议:用户收邮件的协议  端口 110
+
+测试收发邮件
+
+[root@server0 ~]# useradd yg
+[root@server0 ~]# useradd xln
+
+• mail 发信操作
+– mail -s '邮件标题'        -r   发件人[@收件域]        收件人[@收件域]...
+
+• mail 收信操作
+– mail [-u 用户名]
+
+[root@server0 ~]# mail -s 'test'   -r   yg  xln
+
+
+[root@server0 ~]# mail -u  xln
+
+################################################################
+准备交换分区
+
+什么是交换空间
+• 相当于虚拟内存,
+– 当物理内存不够用时,使用磁盘空间来模拟内存
+– 在一定程度上缓解内存不足的问题
+– 交换分区:以空闲分区充当的交换空间
+
+
+虚拟机Server0
+1.划分新的分区,两个2G的主分区
+
+[root@server0 ~]# fdisk  /dev/vdb
+ 
+[root@server0 ~]# ls /dev/vdb1
+[root@server0 ~]# ls /dev/vdb2
+[root@server0 ~]# lsblk 
+
+2.格式化 交换文件系统
+[root@server0 ~]# mkswap /dev/vdb1
+[root@server0 ~]# mkswap /dev/vdb2
+
+[root@server0 ~]# blkid /dev/vdb1
+[root@server0 ~]# blkid /dev/vdb2
+
+3.启用 交换分区
+[root@server0 ~]# swapon -s               #查看交换分区的组成 成员
+[root@server0 ~]# swapon  /dev/vdb1       #启用交换分区
+[root@server0 ~]# swapon  /dev/vdb2       #启用交换分区
+[root@server0 ~]# swapon -s 
+
+[root@server0 ~]# swapoff  /dev/vdb2      #停用交换分区
+[root@server0 ~]# swapon -s
+
+4.完成开机自动启用swap分区
+[root@server0 ~]# vim  /etc/fstab
+/dev/vdb1  swap  swap  defaults  0 0
+/dev/vdb2  swap  swap  defaults 0 0
+[root@server0 ~]# swapoff /dev/vdb1
+
+[root@server0 ~]# swapon -s
+[root@server0 ~]# swapon -a         #检测/etc/fstab文件交换分区书写内容
+[root@server0 ~]# swapon -s
+
+###################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

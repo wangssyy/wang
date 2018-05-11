@@ -1,0 +1,97 @@
+直连
+非直连
+
+静态路由
+
+在路由器中配置ip地址
+1,进入物理接口,使用ip address 命令配置具体地址
+2,将接口打开 no shutdown
+
+使用show ip route 察看路由表
+最终使两台pc互通
+
+C
+
+首先通过配置静态路由使全网互通
+思考题:
+如果仅仅是两台pc之间的互通,配置过程可否简化?
+
+
+
+
+通过配置默认路由使全网互通
+ip route 0.0.0.0 0.0.0.0 下一跳地址
+末梢网络
+
+
+1,创建vlan
+Switch(config)#vlan 10
+2,给相应的vlan配置ip
+Switch(config)#interface vlan 10
+Switch(config-if)#ip address XXXX
+3,把物理接口加入相应的vlan
+Switch(config-if)#switchport access vlan 10
+4,开启路由功能 
+Switch(config)#ip routing
+二层交换机需要创建vlan40与vlan50,并把连接的pc接入相应的vlan
+三层交换机配置trunk之前需要打802.1q封装
+Switch(config-if)#switchport trunk encapsulation dot1q 
+
+
+
+
+将三层交换机接口转换为路由器接口
+Switch(config-if)#no switchport
+
+开启ospf协议
+Router(config)#router ospf 1
+宣告所在网段与区域
+Router(config-router)#network 网络ID 反掩码 area 0
+
+排错思路
+1,ip地址
+2,接口
+3,vlan 和 trunk 
+4,路由
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

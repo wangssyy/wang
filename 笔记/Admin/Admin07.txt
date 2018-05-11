@@ -1,0 +1,257 @@
+教学环境介绍
+
+使用教学虚拟机
+
+
+• 每个学员机上有三台预先配置好的虚拟机
+• 真机上操作：控制教学用虚拟机
+– 格式:rht-vmctl  控制指令   虚拟机名
+– 常用控制指令: reset(还原)
+
+[root@room9pc01 ~]# rht-vmctl reset classroom
+[root@room9pc01 ~]# rht-vmctl reset server
+[root@room9pc01 ~]# rht-vmctl reset desktop
+
+  虚拟机Server
+          IP地址：172.25.0.11
+                  主机名：server0.example.com
+                  系统版本：RHEL 7.0
+
+  虚拟机Desktop
+          IP地址：172.25.0.10
+                  主机名：desktop0.example.com
+                  系统版本：RHEL 7.0
+
+
+
+
+##############################################################
+
+find查找文件
+• 根据名称查找,忽略大小写
+– -iname
+[root@server0 ~]# find /etc/ -name "PASSWD"
+[root@server0 ~]# find /etc/ -iname "PASSWD"
+
+• 根据账号名称或所属组
+– -user、-group
+[root@server0 ~]# find /home/ -group student
+
+• 限制目录查找的深度(最大层数)
+– -maxdepth
+[root@server0 ~]# find /etc/ -maxdepth  1  -name  "*.conf"
+[root@server0 ~]# find /etc/ -maxdepth  2  -name  "*.conf"
+
+##########################################################
+附加权限
+
+Set UID
+• 附加在属主的 x 位上
+– 属主的权限标识会变为 s
+– 适用于可执行文件,Set UID可以让使用者具有文件属主的身份及部分权限
+– 传递Set UID文件所有者身份
+
+[root@server0 ~]# ls /usr/bin/mkdir 
+/usr/bin/mkdir
+[root@server0 ~]# /usr/bin/mkdir /opt/test01
+[root@server0 ~]# ls /opt/
+rh  test01
+[root@server0 ~]# cp /usr/bin/mkdir /usr/bin/hahadir
+[root@server0 ~]# /usr/bin/hahadir /opt/test02
+[root@server0 ~]# ls /opt/
+
+[root@server0 ~]# ls -l /usr/bin/hahadir 
+-rwxr-xr-x. 1 root root 79712 3月  17 09:41 /usr/bin/hahadir
+[root@server0 ~]# chmod u+s /usr/bin/hahadir
+[root@server0 ~]# ls -l /usr/bin/hahadir 
+[root@server0 ~]# su - student
+[student@server0 ~]$ /usr/bin/mkdir nsd01
+[student@server0 ~]$ ls -l
+total 0
+drwxrwxr-x. 2 student student 6 Mar 17 09:44 nsd01
+[student@server0 ~]$ /usr/bin/hahadir nsd02
+[student@server0 ~]$ ls -l 
+
+
+
+
+Sticky Bit
+• 附加在其他人的 x 位上
+– 其他人的权限标识会变为 t
+– 适用于开放 w 权限的目录,可以阻止用户滥用 w 写入权限(禁止操作别人的文档)
+
+[root@server0 ~]# mkdir /public
+[root@server0 ~]# chmod ugo=rwx /public
+[root@server0 ~]# ls -ld /public
+
+[root@server0 ~]# chmod o+t /public
+[root@server0 ~]# ls -ld /public
+
+
+#########################################################
+内核升级
+
+下载软件包
+• 使用wget下载工具
+ – wget 软件包的URL网址
+
+
+在虚拟机Server：
+
+# wget http://classroom.example.com/content/rhel7.0/x86_64/errata/Packages/kernel-3.10.0-123.1.2.el7.x86_64.rpm
+
+  默认下载到当前路径
+
+# uname -r
+
+# rpm -ivh kernel-3.10.0-123.1.2.el7.x86_64.rpm 
+
+# reboot 
+
+[root@room9pc01 ~]# ssh -X root@172.25.0.11
+
+[root@server0 ~]# uname -r
+3.10.0-123.1.2.el7.x86_64
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

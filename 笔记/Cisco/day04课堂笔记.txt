@@ -1,0 +1,52 @@
+ip范围
+子网掩码
+网关
+dns
+保留范围
+
+使用标准acl限制192.168.2.2访问1.1
+1,确定被限制的主机,使用access-list 1 deny host 192.168.2.2  创建acl列表
+
+为了使192.168.2.3可以通过,需要追加access-list 1 permit host 192.168.2.3
+
+2,把列表应用在接口中,先进入接口模式,然后根据数据来源的方向配置ip access-group 1 in
+
+
+
+access-list 100 permit tcp host 192.168.1.1 host 192.168.3.1 eq www
+
+access-list 100 permit ip host 192.168.1.1 192.168.2.0 0.0.0.255
+
+
+
+
+
+A 1~127     10.0.0.0
+B 128~191   172.16.0.0~172.31.255.255
+C 192~223   192.168.0.0~192.168.255.255
+
+
+使用PAT（端口多路复用）
+1，配置ip
+2，使用标准acl确定哪个范围的主机可以访问外网
+access-list 1 permit any
+3，配置PAT条目
+ip nat inside source list 1 interface FastEthernet0/1 overload
+4，在接口中应用
+内网接口 ip nat inside
+外网接口 ip nat outside
+察看nat缓存记录
+Router#show ip nat translations 
+清空nat缓存记录
+Router#clear ip nat translation *
+开启nat排错功能
+Router#debug ip nat 
+关闭排错功能能
+Router#u all
+
+
+
+
+
+
+
