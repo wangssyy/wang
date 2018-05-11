@@ -1,0 +1,11 @@
+开机按"e"健
+找到linux16行，按“end”光标移至末尾，末尾添加rd.break console=tty0 按ctrl+x 进入救援模式
+switch_root:/# mount -o remount,rw /sysroot  //以读写方式挂在根目录
+switch_root:/# chroot /sysroot       //切换到根目录
+sh-4.2# echo 密码 | passwd --stdin root     //修改密码
+sh-4.2# touch /.autorelabel        //在下一次开机的时候重做selinux标签
+sh-4.2# exit
+switch_root:/# reboot
+
+
+
